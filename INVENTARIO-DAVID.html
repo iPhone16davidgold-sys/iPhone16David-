@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f7b6c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Reposición">
+<title>Inventario de reposición</title>
+<style>
+:root{--bg:#eef1f4;--card:#fff;--ink:#1b2a3a;--mute:#5d6b7a;--line:#d5dbe2;--acc:#0f7b6c;--acc-ink:#fff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121a22;--card:#1a242f;--ink:#e6ecf2;--mute:#9aa8b6;--line:#2c3947;--acc:#3cc4ae;--acc-ink:#07201b}}
+:root[data-theme="dark"]{--bg:#121a22;--card:#1a242f;--ink:#e6ecf2;--mute:#9aa8b6;--line:#2c3947;--acc:#3cc4ae;--acc-ink:#07201b}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 "IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:520px;margin:0 auto;padding:20px 16px 90px}
+h1{font-size:22px;margin:0 0 4px;font-weight:600}
+.sub{color:var(--mute);margin:0 0 16px}
+.head{display:flex;justify-content:space-between;color:var(--mute);font-size:13px;padding:0 4px 6px}
+h2{font-size:15px;font-weight:600;color:var(--mute);margin:20px 4px 8px;text-transform:uppercase;letter-spacing:.04em}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.row.on{border-color:var(--acc)}
+.name{flex:1;font-weight:500;overflow-wrap:anywhere}
+.qty{display:flex;align-items:center;gap:6px}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.qty button{width:36px;height:40px;font-size:20px;padding:0}
+.qty input{width:64px;height:40px;text-align:center;font:inherit;font-weight:600;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px}
+input:focus-visible,button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.foot{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+.foot span{color:var(--mute)}
+.pick{-webkit-appearance:none;appearance:none;width:26px;height:26px;margin:0;flex:none;cursor:pointer;background:#fff;border:2px solid #9aa8b6;border-radius:8px;position:relative}
+.pick:checked{background:var(--acc);border-color:var(--acc)}
+.pick:checked::after{content:"";position:absolute;left:7px;top:2px;width:6px;height:12px;border:solid var(--acc-ink);border-width:0 3px 3px 0;transform:rotate(45deg)}
+.qty button:disabled,.qty input:disabled{opacity:.4;cursor:not-allowed}
+.wa{display:block;margin:0 0 8px;text-align:center;text-decoration:none;background:#1fa855;color:#fff;font-weight:600;border-radius:10px;padding:13px}
+.wa.off{opacity:.45;pointer-events:none}
+.cp{width:100%;margin:0 0 16px;padding:13px;font-weight:600;border-radius:10px;background:var(--card);color:var(--ink);border:1px solid var(--acc)}
+.cp:disabled{opacity:.45;cursor:not-allowed}
+[hidden]{display:none!important}
+.search{width:100%;font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px}
+.empty{text-align:center;color:var(--mute);padding:24px 12px}
+.top{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:48px;height:48px;padding:0;border-radius:50%;border:0;background:var(--acc);color:var(--acc-ink);box-shadow:0 2px 10px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transform:translateY(8px);transition:opacity .2s,transform .2s,visibility .2s;z-index:10}
+.top.show{opacity:1;visibility:visible;transform:none}
+.top svg{width:22px;height:22px}
+.topbar{display:flex;flex-wrap:nowrap;gap:6px;margin:0 0 12px}
+.topbar button{flex:1 1 0;min-width:0;padding:10px 2px;font-size:13px;white-space:nowrap;text-align:center}
+#addb{flex-grow:1.4}
+.picked{background:var(--card);border:1px solid var(--acc);border-radius:10px;padding:4px 12px 10px;margin:0 0 16px}
+.picked h2{margin:10px 0 6px}
+.pdel{flex:none;padding:6px 12px;font-size:14px;font-weight:600;color:#fff;background:#c0392b;border:0}
+.prow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--line)}
+.prow:first-of-type{border-top:0}
+.prow .pn{flex:1;font-weight:500;overflow-wrap:anywhere}
+.prow .pq{font-weight:600;color:var(--acc);white-space:nowrap}
+.prow .pq.z{color:var(--mute);font-weight:400}
+.chips{display:flex;gap:6px;width:100%;padding-left:36px}
+.chips button{padding:6px 14px;font-size:14px}
+.ib{padding:8px 12px;flex:none}
+.fchips{display:flex;gap:8px;overflow-x:auto;margin:-4px 0 12px;padding-bottom:4px}
+.fchips button{flex:none;padding:8px 14px;border-radius:999px}
+.fchips button.on{background:var(--acc);color:var(--acc-ink);border-color:var(--acc);font-weight:600}
+.cnt{font-size:13px;color:var(--mute);margin:-6px 0 10px}
+#dbar{position:fixed;left:16px;right:76px;bottom:calc(80px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:8px;background:#1b2a3a;color:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;box-shadow:0 2px 10px rgba(0,0,0,.3);z-index:20}
+#dbar span{flex:1;font-weight:600}
+body.dm{padding-bottom:150px}
+.drow{cursor:pointer}.drow.dsel{border-color:#c0392b;background:rgba(192,57,43,.12)}.dchk{pointer-events:none;accent-color:#c0392b}
+.name{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;cursor:pointer}
+.cy{background:#c0392b;border-color:#c0392b;color:#fff;font-weight:600}
+.ename{flex:1;min-width:0;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--acc);border-radius:8px;padding:9px}
+.addp{display:flex;flex-direction:column;gap:8px;background:var(--card);border:1px solid var(--acc);border-radius:10px;padding:12px;margin:0 0 16px}
+.addp .search{margin:0}
+.gsel{display:flex;flex-wrap:wrap;gap:8px}
+.gsel button{padding:9px 14px}
+.gsel button.on{background:var(--acc);color:var(--acc-ink);border-color:var(--acc);font-weight:600}
+.addp h2{margin:0}
+.addp .go{background:var(--acc);color:var(--acc-ink);border:0;font-weight:600;padding:11px}
+#toast{position:fixed;left:16px;right:16px;top:50%;transform:translateY(-50%);box-shadow:0 2px 10px rgba(0,0,0,.3);background:#1b2a3a;color:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;z-index:20}
+#toast button{background:none;border:0;color:#7fe3d0;font-weight:600;padding:0 4px}
+</style>
+</head>
+<body>
+<main>
+<h1>REPOSICIÓN DE PRODUCTOS</h1>
+<p class="sub">Busca un producto, márcalo con el botón blanco y ajusta la cantidad con + y − o escribiéndola.</p>
+<div class="topbar"><button id="inst" hidden>Instalar app</button><button id="addb">Agregar productos</button><button id="editb">Editar lista</button><button id="clear">Borrar todo</button></div>
+<section class="addp" id="addp" hidden><h2>Agregar producto</h2>
+<input class="search" id="an" placeholder="Nombre (ej. Aceite 1L (1234))" autocomplete="off">
+<div class="gsel" id="gsel" role="radiogroup" aria-label="Clasificación"></div>
+<button class="go" id="addBtn">Agregar</button></section>
+<section class="picked" id="picked" hidden><h2>Seleccionados</h2><div id="pickedList"></div></section>
+<a class="wa off" id="wa" href="#" target="_blank" rel="noopener">Compartir por WhatsApp</a>
+<button type="button" class="cp" id="cp" disabled>Copiar lista</button>
+<input type="search" id="s" class="search" placeholder="Buscar producto o código" aria-label="Buscar producto" autocomplete="off">
+<div class="fchips" id="fchips" role="group" aria-label="Filtrar por clasificación"></div>
+<div class="cnt" id="cnt" hidden></div>
+<div class="head"><span>Producto</span><span>Cantidad a reponer</span></div>
+<div id="items"></div>
+<div class="empty" id="none" hidden>No se encontraron productos.</div>
+<div class="foot"><span id="total"></span></div>
+</main>
+<div id="toast" hidden></div>
+<div id="dbar" hidden><span id="dcount"></span><button class="ib cy" id="dyes">Eliminar</button><button class="ib" id="dno">Cancelar</button></div>
+<script>
+(function(){
+var KEY="inventario-bus-v1",SKEY="inventario-bus-sel-v1",DKEY="inventario-bus-data-v1";
+var DEF=[
+{t:"Aguas",l:["Lavaparabrisas 1L (3447)","Lavaparabrisas 5L (3364)","Coolant (1637)","Agua verde 1L (3423)","Agua verde 5L (3430)","Agua gris 1L (3409)","Agua gris 5L (3416)","BlueMax (8080)"]},
+{t:"Lubricantes",l:["Súper 2000 10w40 1L (2374)","Súper 2000 10w40 4L (2381)","Súper 3000 5w30 1L (0950)","Súper 3000 5w30 4L (0943)","Súper 1000 20w50 (0677)","Súper 1000 20w50 (7974)","Delvac Modern 1L 15w40 (3067)","Delvac Modern 4L 15w40 (3074)","Delvac Legend 1L 20w50 (2992)","Delvac Legend 4L 20w50 (3005)","Break Fluid 0,5L (1704)","Outboard 2T 0,5L (9852)","Outboard 2T 1L (9656)","Outboard 4T 1L (0912)","Mobilube HD Plus 1L (6618)","Mobil Heavy Duty 1L (6465)","Mobil 1 1L (3821)","Mobil 1 1L (3852)","Súper Moto 2T 0,5L (2497)","Mobil ATF 220 (6632)","Esso 20w50 (3692)","Esso 5w30 (3777)","Esso 10w40 (3685)"]},
+{t:"Bidones",l:["Bidón de gasolina (03)","Bidón de diesel (06)"]},
+{t:"Promociones",l:["MUG verde (2070)","PILOTOS (0434)","Auto “Jorge Martínez” (0267)","Auto “Gerardo Rosselot” (0274)","Sticker 1 (2056)","COOLER (2094)","Parlante lila (2209)","Parlante azul (2162)","Parlante verde (2193)"]}
+];
+var DATA,PRODUCTS=[],q,sel,edit=false,editing=-1,conf=-1,tm,dp,$=function(id){return document.getElementById(id)};
+function rd(k,d){try{var r=localStorage.getItem(k);if(r){var v=JSON.parse(r);if(v)return v}}catch(e){}return d}
+function wr(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function saveAll(){wr(KEY,q);wr(SKEY,sel);wr(DKEY,DATA)}
+DATA=rd(DKEY,null);if(!Array.isArray(DATA))DATA=JSON.parse(JSON.stringify(DEF));DATA.forEach(function(c){if(c.t==="Fluidos")c.t="Aguas";else if(c.t==="Artículos")c.t="Promociones"});q=rd(KEY,{});sel=rd(SKEY,{});
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function norm(x){return String(x).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase()}
+function snap(){return JSON.stringify({d:DATA,q:q,sel:sel})}
+var undoSnap=null;
+function toast(m,s){clearTimeout(tm);var t=$("toast");undoSnap=s||null;t.innerHTML="<span>"+esc(m)+"</span>"+(s?'<button type="button" id="undo">Deshacer</button>':"");t.hidden=false;
+tm=setTimeout(function(){t.hidden=true;undoSnap=null},7000)}
+$("toast").addEventListener("click",function(e){if(!e.target.closest("#undo")||!undoSnap)return;
+try{var o=JSON.parse(undoSnap);DATA=o.d;q=o.q;sel=o.sel;saveAll();render();toast("Lista restaurada")}catch(x){}});
+function loc(i){var k=0;for(var g=0;g<DATA.length;g++){if(i<k+DATA[g].l.length)return[g,i-k];k+=DATA[g].l.length}}
+function rowHtml(p,i){
+if(dm)return'<div class="row drow'+(dsel[p]?" dsel":"")+'" data-i="'+i+'"><input type="checkbox" class="dchk" tabindex="-1"'+(dsel[p]?" checked":"")+'><span class="name">'+esc(p)+"</span></div>";
+if(conf===i)return'<div class="row" data-i="'+i+'"><span class="name">¿Eliminar «'+esc(p)+'»?</span><button class="ib cy" data-e="yes">Sí, eliminar</button><button class="ib" data-e="cancel">Cancelar</button></div>';
+if(edit){if(editing===i)return'<div class="row" data-i="'+i+'"><input class="ename" value="'+esc(p)+'" aria-label="Nombre del producto"><button class="ib" data-e="ok" aria-label="Guardar">✓</button><button class="ib" data-e="no" aria-label="Cancelar">✕</button></div>';
+return'<div class="row" data-i="'+i+'"><span class="name">'+esc(p)+'</span><button class="ib cy" data-e="del" aria-label="Eliminar '+esc(p)+'">Eliminar</button></div>'}
+var on=sel[p],v=q[p]||0,d=on?"":" disabled";
+return'<div class="row'+(on?" on":"")+'" data-i="'+i+'"><input type="checkbox" class="pick"'+(on?" checked":"")+' aria-label="Seleccionar '+esc(p)+'"><span class="name">'+esc(p)+'</span><div class="qty"><button data-a="dec"'+d+' aria-label="Restar uno">−</button><input type="number" inputmode="numeric" min="0" value="'+(v||"")+'" placeholder="0"'+d+' aria-label="Cantidad de '+esc(p)+'"><button data-a="inc"'+d+' aria-label="Sumar uno">+</button></div>'+"</div>"}
+var CATS=["Aguas","Lubricantes","Bidones","Promociones"],ng="Aguas",dm=false,dsel={},dmT=0,fc="",fts=[];
+function drawF(){fts=DATA.map(function(g){return g.t}).filter(Boolean);if(fc&&fts.indexOf(fc)<0)fc="";
+$("fchips").hidden=fts.length<2;
+$("fchips").innerHTML='<button type="button" class="'+(fc?"":"on")+'" data-i="-1">Todas</button>'+fts.map(function(t,i){return'<button type="button" class="'+(t===fc?"on":"")+'" data-i="'+i+'">'+esc(t)+"</button>"}).join("")}
+function drawG(){var ts=CATS;if(ts.indexOf(ng)<0)ng=ts[0];$("gsel").innerHTML=ts.map(function(t,i){return'<button type="button" role="radio" aria-checked="'+(t===ng)+'" class="'+(t===ng?"on":"")+'" data-i="'+i+'">'+esc(t)+"</button>"}).join("")}
+function render(){
+PRODUCTS=[].concat.apply([],DATA.map(function(g){return g.l}));var k=0;
+drawG();drawF();
+$("items").innerHTML=DATA.map(function(g){return'<section class="grp" data-t="'+esc(g.t)+'">'+(g.t?"<h2>"+esc(g.t)+"</h2>":"")+g.l.map(function(p){return rowHtml(p,k++)}).join("")+"</section>"}).join("");
+var dn=Object.keys(dsel).length;$("dbar").hidden=!dm;document.body.classList.toggle("dm",dm);$("dcount").textContent=dn+(dn===1?" seleccionado":" seleccionados");total();filter()}
+function codes(p){return(p.match(/\((\d+)\)/g)||[]).map(function(x){return x.slice(1,-1)})}
+function filter(){var raw=$("s").value.trim(),t=norm(raw),num=/^#?\d+$/.test(raw),qn=raw.replace("#",""),any=false,n=0;
+document.querySelectorAll(".grp").forEach(function(g){var v=0,off=fc&&g.dataset.t!==fc;g.querySelectorAll(".row").forEach(function(r){var p=PRODUCTS[r.dataset.i],m=!off;
+if(m&&t){if(num){var cs=codes(p);m=cs.length?cs.some(function(c){return c.indexOf(qn)>-1}):norm(p).indexOf(t)>-1}else m=norm(p).indexOf(t)>-1}
+r.hidden=!m;if(m)v++});g.hidden=!v;if(v){any=true;n+=v}});
+$("none").hidden=any;var c=$("cnt");c.hidden=!(t||fc);c.textContent=n+(n===1?" resultado":" resultados")}
+$("fchips").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;var i=+b.dataset.i;fc=i<0?"":fts[i];drawF();filter()});
+function shareList(){return PRODUCTS.filter(function(p){return sel[p]&&q[p]>0})}
+function buildText(){var lines=["*REPOSICIÓN DE PRODUCTOS*",""],n=0,t=0;
+DATA.forEach(function(g){var it=g.l.filter(function(p){return sel[p]&&q[p]>0});if(!it.length)return;
+if(g.t)lines.push("*"+g.t.toUpperCase()+"*");
+it.forEach(function(p){lines.push("• "+p+": "+q[p])});lines.push("")});
+while(lines.length&&lines[lines.length-1]==="")lines.pop();return lines.join("\n")}
+function waLink(n){var a=$("wa");a.classList.toggle("off",!n);$("cp").disabled=!n;
+if(!n){a.setAttribute("href","#");return}
+a.setAttribute("href","https://wa.me/?text="+encodeURIComponent(buildText()))}
+$("cp").addEventListener("click",function(){var tx=buildText();
+function ok(){toast("Lista copiada")}
+function fb(){var a=document.createElement("textarea");a.value=tx;a.style.position="fixed";a.style.opacity="0";document.body.appendChild(a);a.select();try{document.execCommand("copy");ok()}catch(e){toast("No se pudo copiar")}document.body.removeChild(a)}
+if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(tx).then(ok,fb);else fb()});
+function renderPicked(){
+var ps=PRODUCTS.filter(function(p){return sel[p]});
+$("picked").hidden=!ps.length;
+$("pickedList").innerHTML=ps.map(function(p){var v=q[p]||0;return'<div class="prow"><span class="pn">'+esc(p)+'</span><span class="pq'+(v?"":" z")+'">'+(v?"× "+v:"sin cantidad")+'</span><button class="pdel" data-i="'+PRODUCTS.indexOf(p)+'" aria-label="Eliminar '+esc(p)+'">Eliminar</button></div>'}).join("")}
+function total(){renderPicked();
+var n=0,t=0;PRODUCTS.forEach(function(p){if(sel[p]&&q[p]>0){n++;t+=q[p]}});
+waLink(shareList().length);
+$("total").textContent=n?n+" producto"+(n>1?"s":"")+" · "+t+" unidades":"Marca productos y escribe cantidades"}
+function set(row,v){var p=PRODUCTS[row.dataset.i];v=Math.max(0,parseInt(v)||0);if(v)q[p]=v;else delete q[p];saveAll();total();return v}
+function rename(i,val){val=val.trim();var p=PRODUCTS[i];if(!val)return;
+if(val!==p&&PRODUCTS.indexOf(val)>-1){toast("Ya existe un producto con ese nombre");return}
+var l=loc(i);DATA[l[0]].l[l[1]]=val;
+if(val!==p){if(q[p]){q[val]=q[p];delete q[p]}if(sel[p]){sel[val]=1;delete sel[p]}}
+editing=-1;saveAll();render()}
+$("items").addEventListener("click",function(e){
+if(dm){if(Date.now()-dmT<500)return;var r=e.target.closest(".row");if(!r)return;var p=PRODUCTS[+r.dataset.i];if(dsel[p])delete dsel[p];else dsel[p]=1;if(!Object.keys(dsel).length)dm=false;render();return}
+var b=e.target.closest("button");if(!b)return;var row=b.closest(".row");if(!row)return;var i=+row.dataset.i,a=b.dataset.e;
+if(a){
+if(a==="edit"){editing=i;conf=-1;render();var n=document.querySelector(".ename");if(n){n.focus();n.select()}}
+else if(a==="no"){editing=-1;render()}
+else if(a==="ok"){rename(i,row.querySelector(".ename").value)}
+else if(a==="del"){conf=i;editing=-1;render()}
+else if(a==="cancel"){conf=-1;render()}
+else if(a==="yes"){var p=PRODUCTS[i],l=loc(i);conf=-1;DATA[l[0]].l.splice(l[1],1);delete q[p];delete sel[p];
+DATA=DATA.filter(function(g){return g.l.length});saveAll();render();toast("Producto eliminado")}
+return}
+var inp=row.querySelector(".qty input"),d=b.dataset.n?+b.dataset.n:(b.dataset.a==="inc"?1:-1);
+var v=set(row,(parseInt(inp.value)||0)+d);inp.value=v||""});
+var lp=null,lx=0,ly=0;
+function lpStop(){clearTimeout(lp);lp=null}
+$("items").addEventListener("pointerdown",function(e){var n=e.target.closest(".name");if(!n||edit||dm)return;var r=n.closest(".row");if(!r||conf===+r.dataset.i)return;lx=e.clientX;ly=e.clientY;lpStop();
+lp=setTimeout(function(){lp=null;var p=PRODUCTS[+r.dataset.i];dm=true;dmT=Date.now();dsel={};dsel[p]=1;conf=-1;editing=-1;if(navigator.vibrate)try{navigator.vibrate(30)}catch(x){}render()},550)});
+$("items").addEventListener("pointermove",function(e){if(lp&&(Math.abs(e.clientX-lx)>10||Math.abs(e.clientY-ly)>10))lpStop()});
+["pointerup","pointercancel","pointerleave"].forEach(function(t){$("items").addEventListener(t,lpStop)});
+$("items").addEventListener("contextmenu",function(e){if(e.target.closest(".name"))e.preventDefault()});
+$("items").addEventListener("input",function(e){var t=e.target;
+if(t.classList.contains("ename")||t.classList.contains("dchk"))return;
+if(t.classList.contains("pick")){var p=PRODUCTS[t.closest(".row").dataset.i];if(t.checked)sel[p]=1;else delete sel[p];saveAll();render();return}
+set(t.closest(".row"),t.value)});
+$("items").addEventListener("keydown",function(e){if(!e.target.classList.contains("ename"))return;
+if(e.key==="Enter"){rename(+e.target.closest(".row").dataset.i,e.target.value)}
+else if(e.key==="Escape"){editing=-1;render()}});
+$("pickedList").addEventListener("click",function(e){var b=e.target.closest(".pdel");if(!b)return;var p=PRODUCTS[+b.dataset.i];delete sel[p];delete q[p];saveAll();render()});
+$("clear").addEventListener("click",function(){if(!Object.keys(q).length&&!Object.keys(sel).length)return;
+var s=snap();q={};sel={};saveAll();render();toast("Lista borrada",s)});
+$("dno").addEventListener("click",function(){dm=false;dsel={};render()});
+$("dyes").addEventListener("click",function(){var n=0;DATA.forEach(function(g){g.l=g.l.filter(function(p){if(dsel[p]){n++;delete q[p];delete sel[p];return false}return true})});DATA=DATA.filter(function(g){return g.l.length});dm=false;dsel={};saveAll();render();toast(n+(n===1?" producto eliminado":" productos eliminados"))});
+$("editb").addEventListener("click",function(){dm=false;dsel={};edit=!edit;editing=-1;conf=-1;this.textContent=edit?"Listo":"Editar lista";$("addp").hidden=true;$("addb").textContent="Agregar productos";render()});
+$("addb").addEventListener("click",function(){var open=$("addp").hidden;dm=false;dsel={};edit=false;editing=-1;conf=-1;$("editb").textContent="Editar lista";$("addp").hidden=!open;this.textContent=open?"Cerrar":"Agregar productos";render();if(open)$("an").focus()});
+$("gsel").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;ng=b.textContent;drawG()});
+$("addBtn").addEventListener("click",function(){var n=$("an").value.trim(),gn=ng||"Otros";
+if(!n){$("an").focus();return}
+if(PRODUCTS.indexOf(n)>-1){toast("Ya existe un producto con ese nombre");return}
+var g=DATA.filter(function(x){return norm(x.t)===norm(gn)})[0];
+if(g)g.l.push(n);else{DATA.push({t:gn,l:[n]});DATA.sort(function(a,b){var x=CATS.indexOf(a.t),y=CATS.indexOf(b.t);return(x<0?99:x)-(y<0?99:y)})}
+$("an").value="";saveAll();render();toast("Agregado a "+(g?g.t:gn));$("an").focus()});
+$("s").addEventListener("input",filter);
+window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();dp=e;$("inst").hidden=false});
+$("inst").addEventListener("click",function(){if(dp){dp.prompt();dp=null;$("inst").hidden=true}});
+try{var c=document.createElement("canvas");c.width=c.height=512;var x=c.getContext("2d");x.fillStyle="#0f7b6c";x.fillRect(0,0,512,512);x.fillStyle="#fff";x.font="bold 300px sans-serif";x.textAlign="center";x.textBaseline="middle";x.fillText("R",256,270);
+c.toBlob(function(b){var u=URL.createObjectURL(b),l=document.createElement("link");l.rel="apple-touch-icon";l.href=u;document.head.appendChild(l);
+var m={name:"Reposición de productos",short_name:"Reposición",start_url:location.href,display:"standalone",background_color:"#eef1f4",theme_color:"#0f7b6c",icons:[{src:u,sizes:"512x512",type:"image/png"}]};
+var ml=document.createElement("link");ml.rel="manifest";ml.href=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:"application/manifest+json"}));document.head.appendChild(ml)})}catch(e){}
+render();
+})();
+</script>
+<button type="button" class="top" id="top" aria-label="Volver arriba"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 15l7-7 7 7"/></svg></button>
+<script>
+(function(){var b=document.getElementById("top");
+function t(){b.classList.toggle("show",(window.pageYOffset||document.documentElement.scrollTop)>300)}
+window.addEventListener("scroll",t,{passive:true});t();
+b.addEventListener("click",function(){var r=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;window.scrollTo({top:0,behavior:r?"auto":"smooth"})});
+})();
+</script>
+</body>
+</html>
